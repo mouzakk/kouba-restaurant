@@ -8,28 +8,14 @@ on:
 jobs:
   deploy:
     name: Deploy to server
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
-      - name: SSH & deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            set -e
+      - name: Pull latest code
+        run: git pull origin main
 
-            cd ${{ secrets.DEPLOY_PATH }}
+      - name: Restart containers
+        run: docker compose up -d --remove-orphans
 
-            echo "→ Pulling latest code..."
-            git pull origin main
-
-            echo "→ Restarting containers..."
-            docker compose up -d --remove-orphans
-
-            echo "→ Cleaning up unused images..."
-            docker image prune -f
-
-            echo "✓ Deployed successfully"
+      - name: Clean up unused images
+        run: docker image prune -f
